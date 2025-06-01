@@ -1,0 +1,3 @@
+robot_description: "file:///home/singh/ros2_ws2/src/my_robot_description/urdf/my_robot.urdf"
+rviz_config: "file:///home/singh/ros2_ws2/src/my_robot_bringup/rviz/my_config.rviz"
+gazebo_world: "file:///home/singh/ros2_ws2/src/my_robot_bringup/gazebo/my_robot_in_apartment.world"

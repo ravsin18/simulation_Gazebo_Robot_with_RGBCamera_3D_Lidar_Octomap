@@ -1,0 +1,120 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="https:/www.ros.org/wiki/xacro">
+
+    <gazebo reference="base_link">
+        <material>Gazebo/Blue</material>
+    </gazebo>
+    <gazebo reference="camera_link">
+        <material>Gazebo/Red</material>
+        <sensor name="camera_sensor" type="depth">
+            <pose>0 0 0 0 0 0</pose>
+            <visualize>true</visualize>
+            <update_rate>10.0</update_rate>
+            <plugin name="camera_coontroller" filename="libgazebo_ros_camera.so">            
+                <frame_name>camera_link</frame_name>
+                <alwaysOn>true</alwaysOn>
+                <updateRate>10</updateRate>
+                <!--cameraName>camera_sensor</cameraName-->
+                <queueSize>100</queueSize>
+                <imageTopicName>/camera/depth/image_raw</imageTopicName>
+                <cameraInfoTopicName>/camera/depth/camera_info</cameraInfoTopicName>
+                <pointCloudTopicName>/camera/depth/points</pointCloudTopicName>
+                <!--frameName>camera_link</frameName-->
+                <horizontal_fov>1.57</horizontal_fov>
+            </plugin>
+        </sensor>
+    </gazebo>
+
+    <xacro:macro name="gazebo_color" params="link_name color" >
+        <gazebo reference="wheel_${link_name}">
+            <material>Gazebo/${color}</material>
+        </gazebo>
+    </xacro:macro>
+    
+    <xacro:gazebo_color link_name="front_left" color="Green"/>
+    <xacro:gazebo_color link_name="front_right" color="Green"/>
+    <xacro:gazebo_color link_name="rear_left" color="Green"/>
+    <xacro:gazebo_color link_name="rear_right" color="Green"/>
+    
+    <gazebo>
+        <plugin name="diff_drive_controller" filename="libgazebo_ros_diff_drive.so">
+
+
+            <!-- Update rate in Hz -->
+            <update_rate>50</update_rate>
+
+            <!-- wheels -->
+            <left_joint>joint_rear_left</left_joint>
+            <right_joint>joint_rear_right</right_joint>
+            <!-- kinematics -->
+            <wheel_separation>0.37</wheel_separation>
+            <wheel_diameter>0.2</wheel_diameter>
+            <!-- output -->
+            <command_topic>cmd_vel</command_topic>
+            <publish_odom>true</publish_odom>
+            <publish_odom_tf>true</publish_odom_tf>
+            <publish_wheel_tf>true</publish_wheel_tf>
+
+            <odometry_topic>odom</odometry_topic>
+            <odometry_frame>odom</odometry_frame>
+            <robot_base_frame>base_footprint</robot_base_frame>
+            
+
+        </plugin>
+        <!--plugin name="ackermann_steering_plugin" filename="libackermann_steering_plugin.so">
+            <left_steering_joint>joint_front_left</left_steering_joint>
+            <right_steering_joint>joint_front_right</right_steering_joint>
+            <wheel_base>0.4</wheel_base>
+            <track_width>0.28</track_width>
+        </plugin-->
+    </gazebo>
+ <!-- Lidar Sensor -->
+  <gazebo reference="lidar_robot_lidar_top_link">
+    <sensor type="ray" name="lidar_robot_velodyne">
+      <pose>0 0 0.5 0 0 0</pose>
+      <visualize>true</visualize>
+      <update_rate>10</update_rate>
+
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>220</samples>
+            <resolution>1</resolution>
+            <min_angle>-3.142</min_angle>
+            <max_angle>3.142</max_angle>
+          </horizontal>
+          <vertical>
+            <samples>32</samples>
+            <resolution>1</resolution>
+            <min_angle>-0.535</min_angle>
+            <max_angle>0.186</max_angle>
+          </vertical>
+        </scan>
+        <range>
+          <min>0.3</min>
+          <max>5.0</max>
+          <resolution>0.001</resolution>
+        </range>
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.008</stddev>
+        </noise>
+      </ray>
+
+      <plugin name="lidar_robot_scan" filename="libgazebo_ros_ray_sensor.so">
+        <ros>
+          <namespace>lidar_robot</namespace>
+          <remapping>~/scan:=/lidar_robot/velodyne_points</remapping>
+        </ros>
+        <output_type>sensor_msgs/PointCloud2</output_type>
+        <frame_name>lidar_robot_lidar_top_link</frame_name>
+        <organize_cloud>false</organize_cloud>
+        <min_range>0.9</min_range>
+        <max_range>50.0</max_range>
+        <gaussian_noise>0.008</gaussian_noise>
+      </plugin>
+    </sensor>
+  </gazebo>
+</robot>

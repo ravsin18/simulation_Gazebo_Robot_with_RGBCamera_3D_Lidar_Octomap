@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+
+<launch>
+    <let name="urdf_path" 
+        value="$(find-pkg-share my_robot_description)/urdf/my_robot.urdf.xacro"  />
+    <let name="my_config_path"
+        value="$(find-pkg-share my_robot_bringup)/rviz/my_config.rviz" />
+    <!--let name="my_gazebo_path"
+        value="$(find-pkg-share my_robot_bringup)/gazebo/my_robot_in_apartment.world" /-->
+
+    <node pkg="robot_state_publisher" exec="robot_state_publisher">
+        <param name="robot_description"
+              value="$(command 'xacro $(var urdf_path)')"  />
+    </node>
+    
+
+    <include file="$(find-pkg-share gazebo_ros)/launch/gazebo.launch.py">
+        <arg name="world" value="$(find-pkg-share my_robot_bringup)/worlds/test_world.world" />
+    </include>
+
+    <node pkg="gazebo_ros" exec="spawn_entity.py"
+        args="-topic robot_description -entity my_robot"/>
+        
+    <!--node name="gazebo" pkg="gazebo_ros" type="gzserver" output="screen" 
+        args="-s libgazebo_ros_factory.so $(var my_gazebo_path)"/-->
+  
+
+    <node pkg="rviz2" exec="rviz2" output="screen" 
+         args="-d $(var my_config_path)"/>
+
+    <node pkg="octomap_server" exec="octomap_server_node" output="screen">
+        <param name="frame_id" value="base_link"/>
+        <remap from="/cloud_in" to="/lidar_robot/lidar_robot_scan/out"/>
+        <param name="color_mode" value="probability" />
+
+    </node>
+
+    <!--node name="controller_manager" pkg="controller_manager" type="spawner" args="diff_drive_controller"/-->
+    
+</launch>

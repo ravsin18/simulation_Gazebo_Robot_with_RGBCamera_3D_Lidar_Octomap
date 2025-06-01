@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+
+<launch>
+    <let name="urdf_path" value="$(find-pkg-share my_robot_description)/urdf/my_robot.urdf.xacro" />
+    <let name="my_config_path" value="$(find-pkg-share my_robot_bringup)/rviz/my_config.rviz" />
+
+    <!-- Robot State Publisher -->
+    <node pkg="robot_state_publisher" exec="robot_state_publisher">
+        <param name="robot_description" value="$(command 'xacro $(var urdf_path)')" />
+    </node>
+
+    <!-- Gazebo -->
+    <include file="$(find-pkg-share gazebo_ros)/launch/gazebo.launch.py">
+        <arg name="world" value="$(find-pkg-share my_robot_bringup)/worlds/test_world.world" />
+    </include>
+
+    <node pkg="gazebo_ros" exec="spawn_entity.py" args="-topic robot_description -entity my_robot"/>
+
+    <!-- RViz -->
+    <node pkg="rviz2" exec="rviz2" output="screen" args="-d $(var my_config_path)"/>
+
+    <!-- RTAB-Map Synchronizer (RGB + Depth) -->
+    <node pkg="rtabmap_sync" exec="rgbd_sync" name="rgbd_sync" output="screen">
+        <remap from="rgb/image" to="/camera_sensor/image_raw"/>
+        <remap from="depth/image" to="/camera_sensor/depth/image_raw"/>
+        <remap from="rgb/camera_info" to="/camera_sensor/camera_info"/>
+    </node>
+
+    <!-- RTAB-Map Main Node -->
+    <node pkg="rtabmap_ros" exec="rtabmap" name="rtabmap" namespace="rtabmap" output="screen">
+        <param name="frame_id" value="base_link"/>
+        <param name="subscribe_rgbd" value="true"/>
+        <param name="subscribe_scan_cloud" value="true"/>
+        <param name="visual_odometry" value="false"/>  <!-- Assuming fixed sensors, odometry comes from /odom -->
+        
+        <!-- RGBD topic from sync node -->
+        <remap from="rgbd_image" to="/rgbd_image"/>
+
+        <!-- LiDAR point cloud -->
+        <remap from="scan_cloud" to="/lidar_robot/lidar_robot_scan/out"/>
+
+        <!-- Odometry -->
+        <remap from="odom" to="/odom"/>
+    </node>
+
+    <!-- Optional: OctoMap Server using fused cloud -->
+    <!--
+    <node pkg="octomap_server" exec="octomap_server_node" output="screen">
+        <param name="frame_id" value="map"/>
+        <remap from="/cloud_in" to="/rtabmap/cloud_map"/>
+    </node>
+    -->
+</launch>
